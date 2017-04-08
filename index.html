@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Megatrend Impact Analyzer - v0.1</title>
+
+    <link rel="stylesheet" href="css/foundation.css">
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+<div class="row params-container action_change_params">
+    <div class="large-3 medium-3 small-3 columns compact-radio">
+        <div>
+            <label>Select country</label>
+            <select name="country" value="all">
+                <option value='all'>All countries</option>
+                <option value='at'>Austria</option>
+                <option value='be'>Belgium</option>
+                <option value='bg'>Bulgaria</option>
+                <option value='hr'>Croatia</option>
+                <option value='cy'>Cyprus</option>
+                <option value='cz'>Czech Republic</option>
+                <option value='dk'>Denmark</option>
+                <option value='ee'>Estonia</option>
+                <option value='fi'>Finland</option>
+                <option value='fr'>France</option>
+                <option value='de'>Germany</option>
+                <option value='el'>Greece</option>
+                <option value='hu'>Hungary</option>
+                <option value='ie'>Ireland</option>
+                <option value='is'>Island</option>
+                <option value='it'>Italy</option>
+                <option value='lv'>Latvia</option>
+                <option value='lt'>Lithuania</option>
+                <option value='lu'>Luxembourg</option>
+                <option value='mt'>Malta</option>
+                <option value='nl'>Netherlands</option>
+                <option value='no'>Norway</option>
+                <option value='pl'>Poland</option>
+                <option value='pt'>Portugal</option>
+                <option value='ro'>Romania</option>
+                <option value='sk'>Slovakia</option>
+                <option value='si'>Slovenia</option>
+                <option value='es'>Spain</option>
+                <option value='se'>Sweden</option>
+                <option value='ch'>Switzerland</option>
+                <option value='uk'>United Kingdom</option>
+            </select>
+        </div>
+
+        <br>
+
+        <div class="p--compact">
+            <p class="text--small"><strong>Usage:</strong></p>
+            <p class="text--small">Scroll to zoom, drag to move around</p>
+            <p class="text--small">Hover mouse over a node to see details</p>
+        </div>
+    </div>
+
+    <div class="large-3 medium-3 small-3 columns compact-radio">
+        <label>Select ISCO level 1 category</label>
+        <select name="category" value="">
+            <option value=''>All categories</option>
+            <option value='C0'>Armed forces occupations</option>
+            <option value='C1'>Managers</option>
+            <option value='C2'>Professionals</option>
+            <option value='C3'>Technicians and associate professionals</option>
+            <option value='C4'>Clerical support workers</option>
+            <option value='C5'>Service and sales workers</option>
+            <option value='C6'>Skilled agricultural, forestry and fishery workers</option>
+            <option value='C7'>Craft and related trades workers</option>
+            <option value='C8'>Plant and machine operators and assemblers</option>
+            <option value='C9'>Elementary occupations</option>
+        </select>
+    </div>
+
+    <div class="large-2 medium-2 small-2 columns compact-radio">
+        <label>Choose layer</label>
+        <div>
+            <input type="radio" name="imagetype" value="composite" id="composite" checked><label for="composite">Composite</label>
+        </div>
+        <div>
+            <input type="radio" name="imagetype" value="demandsupply" id="demandsupply"><label for="demandsupply">Demand + Supply</label>
+        </div>
+        <div>
+            <input type="radio" name="imagetype" value="megatrend" id="megatrend"><label for="megatrend">Highlight Megatrend</label>
+        </div>
+        <div>
+            <input type="radio" name="imagetype" value="demand" id="demand"><label for="demand">Highlight Demand</label>
+        </div>
+        <div>
+            <input type="radio" name="imagetype" value="supply" id="supply"><label for="supply">Highlight Supply</label>
+        </div>
+    </div>
+
+    <div class="large-4 medium-4 small-4 columns compact-radio">
+        <label>Options</label>
+        <div>
+            <input id="labels" name="labels" type="checkbox"><label for="labels">Show occupation labels</label>
+        </div>
+        <div title="If unchecked, 'red' color on the left and right half are independent. Bright left marks jobs with high demand, bright right - high supply. &#10; &#10;If checked, a brighter left half (red|pink) marks jobs with unsatisfied demand and brighter right half (pink|red] marks jobs with oversupply of jobseekers.">
+            <input id="imbalance" name="imbalance" type="checkbox"><label for="imbalance">Show imbalance</label>
+        </div>
+    </div>
+</div>
+
+<div class="svg-container">
+    <div class="controls">
+        <button class="button secondary hollow action_reset_zoom" title="Reset zoom"><i class="fa fa-arrows-alt"></i></button>
+    </div>
+    <svg></svg>
+</div>
+
+<script src="js/vendor/jquery.js"></script>
+<script src="js/vendor/what-input.js"></script>
+<script src="js/vendor/foundation.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/q.js/1.5.0/q.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/vis.js"></script>
+</body>
+</html>

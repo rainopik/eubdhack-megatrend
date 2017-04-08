@@ -1,0 +1,8 @@
+# IDE generated files
+.idea
+_ide_helper.php
+
+
+# OS junk
+*.DS_Store
+[Tt]humbs.db
