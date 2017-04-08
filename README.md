@@ -2,6 +2,7 @@
 Team NSI Estonia submission for EUBD Hackathlon 2017 
 
 ## Team
+
 * Innar Liiv
 * Rain Öpik
 * Toomas Kirt
@@ -12,17 +13,33 @@ Team NSI Estonia submission for EUBD Hackathlon 2017
 The prototype application can be viewed in a web browser. 
 We recommend to use the latest version of [Google Chrome](https://www.google.com/chrome/browser/desktop/index.html). 
 
-Note: Internet Explorer and Safari are not supported. The latest version of Firefox opens the app, but the render performance is suboptimal. 
+Note: Internet Explorer and Safari are not supported. The latest version of Firefox opens the app, but render performance is suboptimal. 
 
 
-[Click here to open the prototype application](https://rainopik.github.io/eubdhack-megatrend/)
+**[Click here to open the prototype application](https://rainopik.github.io/eubdhack-megatrend/)**
 
 ### How to use
+
+#### Moving around and getting information
+
+The application has two modes:
+
+* **Move & zoom mode** - click and drag mouse to move the graph. Scroll mouse wheel to zoom in and out.
+
+* **Query mode** - hover mouse over a node to display a small tooltip with demand and supply numbers. Hovering also highlights connected jobs and fades out the rest of the graph. 
+
+Click <kbd>Right Mouse Button</kbd> to switch between Move and Query modes.
+
+If the display does not show anything or you get stuck, please reload the page in browser (<kbd>F5</kbd> or <kbd>⌘</kbd> + <kbd>R</kbd>).
+
+
+### Graph description
 
 A node in the graph denotes a job. A job is linked to other jobs based on similarity - for each job we found top 3
 jobs that have the largest number of overlapping skills. 
 
 Nodes are colored to highlight the amount of job vacancies and jobseekers.  
+
 
 The visualizer supports several layers:
 * **Composite**
@@ -58,15 +75,6 @@ Tick the checkbox *Show imbalance* to normalize the colors to the same scale. Th
 
 Note: the EURES data contains huge discrepancies between supply and demand across different countries. 
 Some countries have no job seekers in EURES while showing lots of vacancies and vice versa. Therefore the *Show imbalance* mode may reveal only the extremities.
-
-
-#### Moving around
-
-Click and drag mouse to move the graph. Use mouse wheel to scroll in and out.
- 
-Hovering a mouse over a node displays a small window with demand and supply numbers. Hovering also highlights the connected jobs and fades out the rest of the graph. 
-
-If the display does not show anything or you get stuck, please reload the browser (<kbd>F5</kbd> or <kbd>⌘</kbd> + <kbd>R</kbd>).
 
 
 

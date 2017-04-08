@@ -40,7 +40,8 @@
                     y: null,
                     scale: null
                 }
-            }
+            },
+            mouseMode: "move"
         },
 
         data: {
@@ -75,7 +76,7 @@
         },
 
         initViewPort: function() {
-            var totalHeight = $("body").height();
+            var totalHeight = $(window).height();
             var paramsHeight = $(".params-container").outerHeight();
 
             var svgHeight = totalHeight - paramsHeight - 5;
@@ -101,9 +102,12 @@
                 v.zoomReset();
             });
 
+            $(document).on("click", ".action-toggle-mousemode", function() {
+                v.toggleMouseMode();
+            });
+
             $(window).resize(function() {
                 v.initViewPort();
-                v.zoomReset();
             });
         },
 
@@ -225,11 +229,23 @@
         },
 
         zoomReset: function() {
-            app.vis.g.rootGroup.call(v.g.zoom.transform, v.getZoomIdentityTransform());
+            var g = app.vis.g;
+            var newTransform = v.getZoomIdentityTransform();
+
+            g.zoomGroup
+                .call(g.zoom)
+                .call(g.zoom.transform, newTransform);
+            g.rootGroup
+                .call(v.g.zoom.transform, newTransform);
         },
 
         zoomCenter: function() {
             app.vis.g.rootGroup.call(v.g.zoom.transform, v.getZoomCenterTransform());
+        },
+
+        clear: function() {
+            app.vis.g = {};
+            $("svg").empty();
         },
 
         draw: function() {
@@ -265,16 +281,13 @@
                 k: minZoomScale
             };
 
-            function zoomed() {
-                if (g.rootGroup) {
-                    c.zoom.current = d3.event.transform;
-                    g.rootGroup.attr("transform", d3.event.transform);
-                }
-            }
             if (!g.zoomGroup) {
                 g.zoom = d3.zoom()
                     .scaleExtent([minZoomScale, maxZoomScale])
-                    .on("zoom", zoomed);
+                    .on("zoom", v.onZoom)
+                    .on("start", v.onZoomStart)
+                    .on("end", v.onZoomEnd)
+                ;
 
                 var initialTransform = v.getZoomIdentityTransform();
 
@@ -283,9 +296,10 @@
                     .attr("height", c.canvasSize)
                     .style("fill", "none")
                     .style("pointer-events", "all")
-                    .style("cursor", "all-scroll")
                     .call(g.zoom)
                     .call(g.zoom.transform, initialTransform)
+                    .on("contextmenu", v.toggleMouseMode)
+                    .on("click", v.toggleMouseMode)
                 ;
                 c.zoom.current = initialTransform;
             }
@@ -293,6 +307,7 @@
             if (!g.rootGroup) {
                 g.rootGroup = svg.append("g")
                     .attr("transform", v.getZoomIdentityString())
+                    .on("contextmenu", v.toggleMouseMode)
                 ;
                 g.rootGroup.append("rect")
                     .attr("x", -c.canvasSize / 2)
@@ -304,6 +319,7 @@
                     .attr("pointer-events", "none")
                     .attr("stroke-width", 1)
                     .attr("stroke-dasharray", "20, 20")
+                    .on("contextmenu", v.toggleMouseMode)
                 ;
             }
             if (!g.linkGroup) {
@@ -322,15 +338,14 @@
                 g.nodeLabelGroup = g.rootGroup.append("g");
             }
 
+            v.setMouseMode();
+
             g.tip = d3.tip()
                 .attr("class", "infotip")
                 .html(function(d) {
                     res = "";
-                    res += "<div><strong>" + d["preflabel_en"] + "</strong></div><br/>";
-                    res += "<div>" + d["isco_preflabel_l4"] + " -&gt; </div>";
-                    res += "<div>" + d["isco_preflabel_l3"] + " -&gt; </div>";
-                    res += "<div>" + d["isco_preflabel_l2"] + " -&gt; </div>";
-                    res += "<div>" + d["isco_preflabel_l1"] + "</div>";
+                    res += "<div>Occupation: <strong>" + d["preflabel_en"] + "</strong></div>";
+                    res += "<div>Category: <strong>" + d["isco_preflabel_l1"] + "</strong></div>";
                     res += "<br>";
 
                     var attrNameSupply = p.country + '_cvdes';
@@ -349,7 +364,7 @@
                         case "demandsupply":
                         case "demand":
                             if (d[attrNameDemand]) {
-                                res += "<div>Demand: " + d[attrNameDemand] + "</div>";
+                                res += "<div>Demand: <strong>" + d[attrNameDemand] + "</strong></div>";
                             } else {
                                 res += "<div>No demand</div>";
                             }
@@ -360,7 +375,7 @@
                         case "demandsupply":
                         case "supply":
                             if (d[attrNameSupply]) {
-                                res += "<div>Supply: " + d[attrNameSupply] + "</div>";
+                                res += "<div>Supply: <strong>" + d[attrNameSupply] + "</strong></div>";
                             } else {
                                 res += "<div>No supply</div>";
                             }
@@ -371,7 +386,7 @@
                         case "composite":
                         case "megatrend":
                             if (d["megatrend"]) {
-                                res += "<div>Impacted by megatrend, p=" + d["megatrend_prob"] + "</div>";
+                                res += "<div><strong>Impacted by megatrend</strong>, p=" + d["megatrend_prob"] + "</div>";
                             }
                             break;
                     }
@@ -400,7 +415,6 @@
 
             g.rootGroup
                 .attr("class", "root")
-                .style("cursor", "pointer")
             ;
             g.linkGroup
                 .attr("class", "link")
@@ -428,6 +442,7 @@
             ;
             g.nodeLabelGroup
                 .attr("class", "nodelabel")
+                .attr("pointer-events", "none")
             ;
 
             var linkElems = g.linkGroup.selectAll("line")
@@ -462,7 +477,7 @@
                 .attr("cy", function(d) { return scaleY(d.fy); })
                 .attr("fill", v.getNodeFillColor)
                 .attr("i", function(d) { return d.index; })
-                .attr("r", 4.5)
+                .attr("r", 6)
                 .attr("display", v.getNodeVisibility)
                 .on("mouseover", v.nodeMouseOver)
                 .on("mouseout", v.nodeMouseOut)
@@ -531,7 +546,7 @@
                 .attr("cy", function(d) { return scaleY(d.fy); })
                 .attr("stroke", v.getNodeHaloColor)
                 .attr("i", function(d) { return d.index; })
-                .attr("r", 5)
+                .attr("r", 6)
                 .attr("display", v.getNodeVisibility)
                 .on("mouseover", v.nodeMouseOver)
                 .on("mouseout", v.nodeMouseOut)
@@ -556,8 +571,6 @@
                 .attr("y", function(d) { return scaleY(d.fy); })
                 .attr("i", function(d) { return d.index; })
                 .attr("display", v.getNodeLabelVisibility)
-                .on("mouseover", v.nodeMouseOver)
-                .on("mouseout", v.nodeMouseOut)
             ;
             nodeLabels.transition()
                 .duration(0)
@@ -603,7 +616,7 @@
         },
 
         getNodeSectorColor: function(d, half) {
-            var res = "transparent";
+            var res = "#fefefe";
             var v = app.vis;
 
             switch (v.params.imagetype) {
@@ -691,6 +704,9 @@
         nodeMouseOver: function(d) {
             var v = app.vis;
 
+            if (v.config.mouseMode !== "query") {
+                return;
+            }
             if (v.g.tip) {
                 v.g.tip.show(d);
             }
@@ -773,6 +789,9 @@
         nodeMouseOut: function(d) {
             var v = app.vis;
 
+            if (v.config.mouseMode !== "query") {
+                return;
+            }
             if (v.g.tip) {
                 v.g.tip.hide(d);
             }
@@ -802,6 +821,116 @@
                 .classed("blur", false)
                 .classed("focus", false)
             ;
+        },
+
+        setMouseMode: function(mode) {
+            var g = app.vis.g;
+            var c = app.vis.config;
+
+            if (!mode) {
+                mode = c.mouseMode;
+            }
+
+            switch (mode) {
+                case "move":
+                    v.nodeMouseOut();
+
+                    g.rootGroup
+                        .style("cursor", "move")
+                        .style("cursor", "grab")
+                        .style("cursor", "-moz-grab")
+                        .style("cursor", "-webkit-grab")
+                        .attr("pointer-events", "none")
+                    ;
+                    g.zoomGroup
+                        .style("cursor", "move")
+                        .style("cursor", "grab")
+                        .style("cursor", "-moz-grab")
+                        .style("cursor", "-webkit-grab")
+                    ;
+                    break;
+
+                case "query":
+                    g.rootGroup
+                        .style("cursor", "pointer")
+                        .attr("pointer-events", "all")
+                    ;
+                    g.zoomGroup.style("cursor", "default");
+                    break;
+            }
+
+            $(".action-mousemode").addClass("hidden");
+            $(".action-mousemode[data-mode='" + mode + "']").removeClass("hidden");
+
+            c.mouseMode = mode;
+        },
+
+        onZoom: function() {
+            var g = app.vis.g;
+            var c = app.vis.config;
+
+            if (g.rootGroup && c.mouseMode === "move") {
+                c.zoom.current = d3.event.transform;
+                g.rootGroup.attr("transform", d3.event.transform);
+            }
+        },
+
+        onZoomStart: function() {
+            var g = app.vis.g;
+            var c = app.vis.config;
+
+            if (d3.event.sourceEvent && d3.event.sourceEvent.type === "mousedown" && c.mouseMode === "move") {
+                if (g.rootGroup) {
+                    g.rootGroup
+                        .style("cursor", "move")
+                        .style("cursor", "grabbing")
+                        .style("cursor", "-moz-grabbing")
+                        .style("cursor", "-webkit-grabbing")
+                    ;
+                }
+                if (g.zoomGroup) {
+                    g.zoomGroup
+                        .style("cursor", "move")
+                        .style("cursor", "grabbing")
+                        .style("cursor", "-moz-grabbing")
+                        .style("cursor", "-webkit-grabbing")
+                    ;
+                }
+            }
+        },
+
+        onZoomEnd: function() {
+            var g = app.vis.g;
+            var c = app.vis.config;
+            if (c.mouseMode === "move") {
+                if (g.rootGroup) {
+                    g.rootGroup
+                        .style("cursor", "move")
+                        .style("cursor", "grab")
+                        .style("cursor", "-moz-grab")
+                        .style("cursor", "-webkit-grab")
+                        .attr("pointer-events", "none")
+                    ;
+                }
+                if (g.zoomGroup) {
+                    g.zoomGroup
+                        .style("cursor", "move")
+                        .style("cursor", "grab")
+                        .style("cursor", "-moz-grab")
+                        .style("cursor", "-webkit-grab")
+                    ;
+                }
+            }
+        },
+
+        toggleMouseMode: function() {
+            var v = app.vis;
+
+            if (d3.event) {
+                d3.event.preventDefault();
+            }
+            var newMouseMode = v.config.mouseMode === "move" ? "query" : "move";
+            v.setMouseMode(newMouseMode);
         }
 
     });

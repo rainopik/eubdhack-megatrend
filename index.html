@@ -52,33 +52,25 @@
             </select>
         </div>
 
-        <br>
-
-        <div class="p--compact">
-            <p class="text--small"><strong>Usage:</strong></p>
-            <p class="text--small">Scroll to zoom, drag to move around</p>
-            <p class="text--small">Hover mouse over a node to see details</p>
+        <div>
+            <label>Select ISCO level 1 category</label>
+            <select name="category" value="all">
+                <option value='all'>All categories</option>
+                <option value='C0'>Armed forces occupations</option>
+                <option value='C1'>Managers</option>
+                <option value='C2'>Professionals</option>
+                <option value='C3'>Technicians and associate professionals</option>
+                <option value='C4'>Clerical support workers</option>
+                <option value='C5'>Service and sales workers</option>
+                <option value='C6'>Skilled agricultural, forestry and fishery workers</option>
+                <option value='C7'>Craft and related trades workers</option>
+                <option value='C8'>Plant and machine operators and assemblers</option>
+                <option value='C9'>Elementary occupations</option>
+            </select>
         </div>
     </div>
 
     <div class="large-3 medium-3 small-3 columns compact-radio">
-        <label>Select ISCO level 1 category</label>
-        <select name="category" value="">
-            <option value=''>All categories</option>
-            <option value='C0'>Armed forces occupations</option>
-            <option value='C1'>Managers</option>
-            <option value='C2'>Professionals</option>
-            <option value='C3'>Technicians and associate professionals</option>
-            <option value='C4'>Clerical support workers</option>
-            <option value='C5'>Service and sales workers</option>
-            <option value='C6'>Skilled agricultural, forestry and fishery workers</option>
-            <option value='C7'>Craft and related trades workers</option>
-            <option value='C8'>Plant and machine operators and assemblers</option>
-            <option value='C9'>Elementary occupations</option>
-        </select>
-    </div>
-
-    <div class="large-2 medium-2 small-2 columns compact-radio">
         <label>Choose layer</label>
         <div>
             <input type="radio" name="imagetype" value="composite" id="composite" checked><label for="composite">Composite</label>
@@ -97,13 +89,40 @@
         </div>
     </div>
 
-    <div class="large-4 medium-4 small-4 columns compact-radio">
+    <div class="large-3 medium-3 small-3 columns compact-radio">
         <label>Options</label>
         <div>
             <input id="labels" name="labels" type="checkbox"><label for="labels">Show occupation labels</label>
         </div>
         <div title="If unchecked, 'red' color on the left and right half are independent. Bright left marks jobs with high demand, bright right - high supply. &#10; &#10;If checked, a brighter left half (red|pink) marks jobs with unsatisfied demand and brighter right half (pink|red] marks jobs with oversupply of jobseekers.">
             <input id="imbalance" name="imbalance" type="checkbox"><label for="imbalance">Show imbalance</label>
+        </div>
+    </div>
+
+    <div class="large-3 medium-3 small-3 columns">
+        <div class="p--compact">
+            <p class="text--medium">
+                Current mode:
+            </p>
+
+            <div class="action-mousemode" data-mode="move">
+                <p class="text--medium">
+                    <a class="button secondary action-toggle-mousemode">Move & zoom <i class="fa fa-arrows"></i></a>
+                    <a class="button secondary action-toggle-mousemode hollow">Query <i class="fa fa-question-circle-o"></i></a>
+                </p>
+                <br>
+                <p class="text--medium">Drag to move around, scroll to zoom</p>
+                <p class="text--medium"><a class="action-toggle-mousemode">Right-click to switch to query mode</a></p>
+            </div>
+            <div class="action-mousemode hidden" data-mode="query">
+                <p class="text--medium">
+                    <a class="button secondary action-toggle-mousemode hollow">Move & zoom <i class="fa fa-arrows"></i></a>
+                    <a class="button secondary action-toggle-mousemode">Query <i class="fa fa-question-circle-o"></i></a>
+                </p>
+                <br>
+                <p class="text--medium">Hover mouse over a node to see details</p>
+                <p class="text--medium"><a class="action-toggle-mousemode">Right-click to move & zoom</a></p>
+            </div>
         </div>
     </div>
 </div>
