@@ -123,7 +123,7 @@ enumerate all skills that are essential for both occupations.
 
 | from_oc_key                          | to_oc_key                            | skill_in_from_oc     | skill_in_to_oc       |
 | ------------------------------------ | ------------------------------------ | -------------------- | -------------------- |
-| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | provide first aid, provide first aid | *N/A* |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | provide first aid | *N/A* |
 | 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | manoeuvre bus | *N/A* |
 | 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | *N/A* | maintain personal hygiene standards |
 | 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | *N/A* | park vehicles |
@@ -153,10 +153,12 @@ The following table shows an example of the graph for two occupations:
 | 45037d43-a8f5-4f46-b332-b2935bc305f4 | e75305db-9011-4ee0-ab62-8d41a98f807e |             0.45 | *cargo vehicle driver -> private chauffeur*      |
 | ...                                  |                                      |                  |                                                  |
 
-This matrix will be very large, as it will contain occupation pairs which are very loosely connected by a very generic skill. 
+The resulting matrix is very large, as contains occupation pairs that are loosely connected by a very generic skill. 
 For example, both `bus driver` and `physiotherapy assistant` have an `use different communication channels` as essential skill, which connects them in the graph.
-However when we calculate the skill match ratio, we get a modest 0.02. Therefore we decided to prune the graph of occupation pairs that don't make sense in real life 
-and take only 3 most similar occupations for every occupation.
+However when we calculate the skill match ratio, we get a modest 0.02. Also the connection between these occupations does not make sense in real life, as it is difficult
+to imagine that a person skilled in operating heavy vehicles could easily apply for a position that requires medical skills. 
+
+Therefore we decided to prune the graph of weakly connected occupation pairs and take only 3 most similar occupations for every occupation.
 
 
 ---
