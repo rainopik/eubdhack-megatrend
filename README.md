@@ -115,7 +115,30 @@ in the ESCO RDF classifier.
 
 For a given ESCO occupation, we queried all skills that this occupation requires (relation type *essentialSkill* in RDF). 
 Then we matched all ESCO occupations that require the same skills. This produces a mapping *ESCO occupation* --> *ESCO occupation* with a *similarity measure* 
-that describes the ratio of shared skills between two occupations to number of all skills required by the first occupation. To simplify the graph, we only took 3 most similar occupations for every occupation.
+that describes the ratio of shared skills between two occupations to number of all skills required by the first occupation.
+
+Let's take two occupations: `00cee175-1376-43fb-9f02-ba3d7a910a58 - bus driver` and `e75305db-9011-4ee0-ab62-8d41a98f807e - private chauffeur` and 
+enumerate all skills that are essential for both occupations.
+
+
+| from_oc_key                          | to_oc_key                            | skill_in_from_oc     | skill_in_to_oc       |
+| ------------------------------------ | ------------------------------------ | -------------------- | -------------------- |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | provide first aid, provide first aid | *N/A* |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | manoeuvre bus | *N/A* |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | *N/A* | maintain personal hygiene standards |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | *N/A* | park vehicles |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | drive in urban areas | drive in urban areas |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | keep time accurately | keep time accurately |
+| 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e | provide information to passengers | provide information to passengers |
+
+The skills in this table can be divided into three groups:
+* Skill that is only required for the first occupation (eg. `bus driver`)
+* Skill that is only required for the second occupation (eg. `private chauffeur`)
+* Skill that is required by both of these occupations.
+
+When count the number of distinct skills that are required for both occupations (22 for this example) and divide it by the number of distinct skills required for the first occupation (35), 
+we get a percentage of matching skills, which we can use as a similarity measure between these two occupations. 
+
 
 The following table shows an example of the graph for two occupations: 
 
@@ -124,9 +147,16 @@ The following table shows an example of the graph for two occupations:
 | 00cee175-1376-43fb-9f02-ba3d7a910a58 | 3a15ec1b-9250-41a0-9344-feb2956481b7 |             0.80 | *bus driver -> trolley bus driver*               | 
 | 00cee175-1376-43fb-9f02-ba3d7a910a58 | 03e02554-15d1-4697-960c-8909e7d36f7e |             0.77 | *bus driver -> tram driver*                      |
 | 00cee175-1376-43fb-9f02-ba3d7a910a58 | e75305db-9011-4ee0-ab62-8d41a98f807e |             0.63 | *bus driver -> private chauffeur*                |
+| ...                                  |                                      |                  |                                                  |
 | 45037d43-a8f5-4f46-b332-b2935bc305f4 | c5d779f4-345b-4918-872b-a1cbaeb1d9be |             0.60 | *cargo vehicle driver -> dangerous goods driver* |
 | 45037d43-a8f5-4f46-b332-b2935bc305f4 | 00cee175-1376-43fb-9f02-ba3d7a910a58 |             0.55 | *cargo vehicle driver -> bus driver*             |
 | 45037d43-a8f5-4f46-b332-b2935bc305f4 | e75305db-9011-4ee0-ab62-8d41a98f807e |             0.45 | *cargo vehicle driver -> private chauffeur*      |
+| ...                                  |                                      |                  |                                                  |
+
+This matrix will be very large, as it will contain occupation pairs which are very loosely connected by a very generic skill. 
+For example, both `bus driver` and `physiotherapy assistant` have an `use different communication channels` as essential skill, which connects them in the graph.
+However when we calculate the skill match ratio, we get a modest 0.02. Therefore we decided to prune the graph of occupation pairs that don't make sense in real life 
+and take only 3 most similar occupations for every occupation.
 
 
 ---
@@ -163,8 +193,7 @@ Explanation of columns in `g_node` table:
 
 * esco_oc_key - ESCO occupation code .
 * preflabel_en - Preferred occupation label in English.
-* ox_max_prob - Max. probability of automation for this occupation.
-* ox_avg_prob - Mean probability of automation for this occupation.
+* ox_max_prob - Probability of automation for this occupation.
 * all_jv - total number of vacancies for this occupation.
 * at_jv - number of vacancies in Austria (AT).
 * at_be - number of vacancies in Belgium (BE).
@@ -175,12 +204,15 @@ Explanation of columns in `g_node` table:
 * ...
 
 
+
 ### 3. Export data to PSV files
 
 We designed the visualizer tool to run without server backend and online connection to database. This makes it easy to host the tool
-on a static website (like GitHub) without any running costs. 
+on a static website (like GitHub) without any running costs.
 
-We exported data from `g_node` and `g_link` tables to pipe (|) separated value file.
+The final table of similar occupations (`g_link`) was exported to file [data/exp_link.psv](data/exp_link.psv)
+and list of all nodes in the graph (`g_node`) was saved to file [data/exp_node.psv](data/exp_node.psv).
+
 
 
 ### 4. Calculate graph layout
@@ -188,35 +220,27 @@ We exported data from `g_node` and `g_link` tables to pipe (|) separated value f
 Experience with d3.js have shown that real-time calculation of graph layout (the position of every node) may be slow for graphs with non-trivial structure.
 The occupation graph has 2950 nodes and 8838 links and after some experimentation we decided to pre-calculate the positions of graph nodes.
  
-We used the SFDP layout algorithm from Python graph-tool for calculating the position of nodes. 
+We used the SFDP layout algorithm from Python [graph-tool](https://graph-tool.skewed.de/) for calculating the position of nodes and reindexing 
+node identifiers to format that is suitable for visualizer.
 
-See `preprocess/convert_data.py` for script that prepares data files for the Visualizer.
+The script [preprocess/convert_data.py](preprocess/convert_data.py) prepares data files for the Visualizer. 
+It reads [data/exp_node.psv](data/exp_node.psv) and [data/exp_link.psv](data/exp_link.psv) and produces [data/vis_node.csv](data/vis_node.csv) and [data/vis_link.csv](data/vis_link.csv) files.  
 
 
 
 ### 5. Visualizer UI
 
-Visualizer is built with d3.js, which renders a zoomable and scrollable SVG document for browsing the graph.
-See `js/vis.js` for details.
+Visualizer is built with [d3.js](https://d3js.org/), which renders a zoomable and scrollable SVG document for browsing the graph.
+See [js/vis.js](js/vis.js) for details.
+
+
+---
 
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-
-
-## References
-
-
-* <a name="ref1"></a>\[1] Carl Benedikt Frey, Michael A. Osborne, ["The future of employment: How susceptible are jobs to computerisation?"](http://www.sciencedirect.com/science/article/pii/S0040162516302244), Technological Forecasting and Social Change, Volume 114, January 2017, Pages 254-280
-* <a name="ref2"></a>\[2] Wojciech Hardy, David Autor, Daron Acemoglu, ["Occupation classifications crosswalks - from O*NET-SOC to ISCO"](http://ibs.org.pl/en/resources/occupation-classifications-crosswalks-from-onet-soc-to-isco/), 2016 \[Online]. Available at: http://ibs.org.pl/en/resources/occupation-classifications-crosswalks-from-onet-soc-to-isco/ 
-
-
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 
 ## References
