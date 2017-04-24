@@ -133,3 +133,27 @@ g.nodelabel .blur {
 .hidden {
     display: none;
 }
+
+
+@media (max-width: 1270px) {
+    .fork-banner {
+        display: none;
+    }
+}
+
+@media (min-width: 1271px) {
+    .fork-icon {
+        display: none;
+    }
+}
+
+
+.fork-icon {
+    float: right;
+    margin-top: 20px;
+}
+.fork-icon a {
+    color: #000;
+    font-size: 24px;
+    line-height: 24px;
+}
