@@ -61,6 +61,17 @@ g.link .blur {
     opacity: 0.1;
 }
 
+g.linkcareer {
+    stroke-width: 1.0;
+}
+g.linkcareer .focus {
+    stroke-width: 1.5;
+    opacity: 1.0;
+}
+g.linkcareer .blur {
+    opacity: 0.3;
+}
+
 g.nodedot {
     stroke: #aaa;
     stroke-width: 1.0;
@@ -93,6 +104,17 @@ g.nodehalo .blur {
     opacity: 0.1;
 }
 
+g.nodecareer {
+    stroke-width: 2.5;
+    fill: transparent;
+}
+g.nodecareer .focus {
+    opacity: 1.0;
+}
+g.nodecareer .blur {
+    opacity: 0.3;
+}
+
 g.nodelabel {
     font-size: 3px;
     text-anchor: middle;
@@ -105,6 +127,19 @@ g.nodelabel .focus {
 g.nodelabel .blur {
     fill: #999;
 }
+
+g.nodecareerlabel {
+    font-size: 10px;
+    text-anchor: middle;
+    fill: #0000ff;
+}
+g.nodecareerlabel .focus {
+
+}
+g.nodecareerlabel .blur {
+    fill: #8888ff;
+}
+
 
 #spinner {
     position: fixed;
@@ -150,10 +185,30 @@ g.nodelabel .blur {
 
 .fork-icon {
     float: right;
-    margin-top: 20px;
 }
 .fork-icon a {
     color: #000;
     font-size: 24px;
     line-height: 24px;
+}
+
+#career-path-modal h2 {
+    font-size: 24px;
+}
+
+#career-path-modal label span.lbl {
+    display: inline-block;
+    width: 60px;
+}
+
+#career-path-modal label select {
+    width: 500px;
+}
+
+
+.margin-top--tiny {
+    margin-top: 5px;
+}
+.margin-top--small {
+    margin-top: 10px;
 }

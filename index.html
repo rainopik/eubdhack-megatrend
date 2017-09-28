@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Megatrend Impact Analyzer - v0.1</title>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/css/select2.min.css"/>
     <link rel="stylesheet" href="css/foundation.css">
     <link rel="stylesheet" href="css/app.css">
     <link rel="stylesheet" href="css/main.css">
@@ -125,6 +126,11 @@
             </div>
         </div>
 
+        <div class="margin-top--small">
+            <button class="button" data-open="career-path-modal">Career path</button>
+            <button class="button hollow action-clear-career-path hidden">Clear</button>
+        </div>
+
         <div class="fork-icon">
             <a href="https://github.com/rainopik/eubdhack-megatrend" title="Fork me on GitHub"><i class="fa fa-github"></i></a>
         </div>
@@ -141,6 +147,36 @@
     <svg></svg>
 </div>
 
+<div class="reveal" id="career-path-modal" data-reveal>
+    <h2>Find career path</h2>
+    <br>
+    <div>
+        <div class="errors"></div>
+
+        <p>
+            <label for="career_from">
+                <span class="lbl">From:</span>
+                <select id="career_from" name="career_from" class="occupation-selector"></select>
+            </label>
+        </p>
+
+        <p>
+            <label for="career_to">
+                <span class="lbl">To:</span>
+                <select id="career_to" name="career_to" class="occupation-selector"></select>
+            </label>
+        </p>
+
+        <p class="button-group">
+            <button class="button primary action-career-path-find float-right">Find my career</button>
+        </p>
+    </div>
+
+    <button class="close-button" data-close aria-label="Close modal" type="button">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
 <script src="js/vendor/jquery.js"></script>
 <script src="js/vendor/what-input.js"></script>
 <script src="js/vendor/foundation.js"></script>
@@ -148,7 +184,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
 <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/q.js/1.5.0/q.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.4/js/select2.min.js"></script>
+<script src="js/shortest-path.js"></script>
+
 <script src="js/app.js"></script>
 <script src="js/vis.js"></script>
 </body>

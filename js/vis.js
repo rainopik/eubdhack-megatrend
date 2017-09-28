@@ -8,8 +8,11 @@
             nodeDotGroup: null,
             nodeSectorGroup: null,
             nodeHaloGroup: null,
+            nodeCareerGroup: null,
             linkGroup: null,
+            linkCareerGroup: null,
             nodeLabelGroup: null,
+            nodeCareerLabelGroup: null,
             zoomGroup: null,
 
             colorScaleLeft: null,
@@ -86,6 +89,8 @@
         initEvents: function() {
             var v = app.vis;
 
+            $(document).foundation();
+
             $(document).on("change", '.action_change_params select,input[type="radio"],input[type="range"]', function() {
                 var name = $(this).attr("name");
                 var value = $(this).val();
@@ -109,6 +114,18 @@
             $(window).resize(function() {
                 v.initViewPort();
             });
+
+            $(document).on("click", ".action-career-path-find", function() {
+                v.careerPath.find();
+            });
+
+            $(document).on("click", ".action-clear-career-path", function() {
+                v.careerPath.clear();
+            });
+
+            $(document).on('open.zf.reveal', "#career-path-modal", function() {
+                $(this).find('.errors').empty();
+            });
         },
 
         initParams: function() {
@@ -121,6 +138,123 @@
 
                 v.config.countries[code] = name;
             });
+        },
+
+        careerPath: {
+            current: {
+                source: null,
+                target: null,
+                path: [],
+                nodes: []
+            },
+
+            empty: function() {
+                return {
+                    source: null,
+                    target: null,
+                    path: [],
+                    nodes: []
+                };
+            },
+
+            init: function() {
+                var cp = app.vis.careerPath;
+
+                cp.current = cp.empty();
+                cp.initCalculator();
+                cp.initSelect();
+            },
+
+            initCalculator: function() {
+                app.vis.careerPath.calculator = new ShortestPathCalculator(app.vis.data.nodes, app.vis.data.links);
+            },
+
+            initSelect: function() {
+                var data = $.map(app.vis.data.nodes, function(d) { return {id: d.index, text: d.preflabel_en} });
+                data.sort(function(a, b) { return a.text.localeCompare(b.text); });
+                data.unshift({id: -1, text: ''});
+
+                $('.occupation-selector').select2({
+                    data: data
+                });
+
+                // $('[name="career_from"]').val(10).trigger('change');
+                // $('[name="career_to"]').val(100).trigger('change');
+            },
+
+            find: function() {
+                var from = $('[name="career_from"]').val();
+                var to = $('[name="career_to"]').val();
+
+                if (from < 0) {
+                    return app.vis.careerPath.error('Please choose a starting occupation');
+                }
+                if (to < 0) {
+                    return app.vis.careerPath.error('Please choose a destination occupation');
+                }
+                if (from === to) {
+                    return app.vis.careerPath.error('Cannot use same start and destination');
+                }
+
+                app.vis.careerPath.findPath(from, to);
+            },
+
+            findPath: function(from, to) {
+                var cp = app.vis.careerPath;
+
+                var shortestPath = cp.calculator.findRoute(from, to);
+
+                if (shortestPath.mesg !== "OK") {
+                    cp.current = cp.empty();
+
+                    var message = '';
+
+                    switch (shortestPath.mesg) {
+                        case "No path found":
+                            message = "Cannot find career path between selected occupations.";
+                            break;
+
+                        default:
+                            message = shortestPath.mesg;
+                            break;
+                    }
+
+                    return cp.error(message);
+                }
+
+                $('#career-path-modal').foundation('close');
+
+                cp.current = shortestPath;
+                cp.current.nodes = [];
+
+                for (var i = 0; i < shortestPath.path.length; i++) {
+                    cp.current.nodes.push(shortestPath.path[i].source);
+                    cp.current.nodes.push(shortestPath.path[i].target);
+                }
+
+                app.vis.draw();
+
+                $('.action-clear-career-path').removeClass('hidden');
+            },
+
+            clear: function() {
+                app.vis.careerPath.current = app.vis.careerPath.empty();
+                app.vis.draw();
+
+                $('.action-clear-career-path').addClass('hidden');
+            },
+
+            error: function(message, title) {
+                title = typeof(title) === 'undefined' ? 'Error' : title;
+                var template = '<div class="callout small alert">\n' +
+                    '  <h5>' + title + '</h5>\n' +
+                    '  <p>' + message + '</p>\n' +
+                    '</div>';
+
+                $('#career-path-modal .errors').empty().append(template);
+            },
+
+            calculator: null
         },
 
         changeParam: function(name, value) {
@@ -209,6 +343,7 @@
 
             Q.all([v.readNodeFile(), v.readLinkFile()]).then(function() {
                 app.ui.spinnerStop();
+                v.careerPath.init();
                 v.draw();
             });
         },
@@ -334,8 +469,17 @@
             if (!g.nodeHaloGroup) {
                 g.nodeHaloGroup = g.rootGroup.append("g");
             }
+            if (!g.linkCareerGroup) {
+                g.linkCareerGroup = g.rootGroup.append("g");
+            }
+            if (!g.nodeCareerGroup) {
+                g.nodeCareerGroup = g.rootGroup.append("g");
+            }
             if (!g.nodeLabelGroup) {
                 g.nodeLabelGroup = g.rootGroup.append("g");
+            }
+            if (!g.nodeCareerLabelGroup) {
+                g.nodeCareerLabelGroup = g.rootGroup.append("g");
             }
 
             v.setMouseMode();
@@ -440,14 +584,25 @@
                     return v.params.imagetype === "composite" ? "inline" : "none";
                 })
             ;
+            g.linkCareerGroup
+                .attr("class", "linkcareer")
+                .attr("pointer-events", "none")
+            ;
+            g.nodeCareerGroup
+                .attr("class", "nodecareer")
+            ;
             g.nodeLabelGroup
                 .attr("class", "nodelabel")
                 .attr("pointer-events", "none")
             ;
+            g.nodeCareerLabelGroup
+                .attr("class", "nodecareerlabel")
+                .attr("pointer-events", "none")
+            ;
 
             var linkElems = g.linkGroup.selectAll("line")
-                .data(v.data.links);
-
+                .data(v.data.links)
+            ;
             linkElems.enter()
                 .append("line")
                 .attr("x1", function(d) { return scaleX(v.data.nodes[d.source].fx); })
@@ -463,6 +618,30 @@
                 .attr("display", v.getLinkVisiblity)
             ;
             linkElems.exit()
+                .remove()
+            ;
+
+
+            var linkCareerElems = g.linkCareerGroup.selectAll("line")
+                .data(v.data.links)
+            ;
+            linkCareerElems.enter()
+                .append("line")
+                .attr("x1", function(d) { return scaleX(v.data.nodes[d.source].fx); })
+                .attr("y1", function(d) { return scaleY(v.data.nodes[d.source].fy); })
+                .attr("x2", function(d) { return scaleX(v.data.nodes[d.target].fx); })
+                .attr("y2", function(d) { return scaleY(v.data.nodes[d.target].fy); })
+                .attr("si", function(d) { return d.source; })
+                .attr("ti", function(d) { return d.target; })
+                .attr("stroke", v.getLinkCareerColor)
+                .attr("display", v.getLinkVisiblity)
+            ;
+            linkCareerElems.transition()
+                .duration(0)
+                .attr("stroke", v.getLinkCareerColor)
+                .attr("display", v.getLinkVisiblity)
+            ;
+            linkCareerElems.exit()
                 .remove()
             ;
 
@@ -561,6 +740,31 @@
             ;
 
 
+            var nodeCareerElems = g.nodeCareerGroup.selectAll("circle.career")
+                .data(v.data.nodes)
+            ;
+            nodeCareerElems.enter()
+                .append("circle")
+                .attr("class", "career")
+                .attr("cx", function(d) { return scaleX(d.fx); })
+                .attr("cy", function(d) { return scaleY(d.fy); })
+                .attr("stroke", v.getNodeCareerColor)
+                .attr("i", function(d) { return d.index; })
+                .attr("r", 8)
+                .attr("display", v.getNodeVisibility)
+                .on("mouseover", v.nodeMouseOver)
+                .on("mouseout", v.nodeMouseOut)
+            ;
+            nodeCareerElems.transition()
+                .duration(0)
+                .attr("stroke", v.getNodeCareerColor)
+                .attr("display", v.getNodeVisibility)
+            ;
+            nodeCareerElems.exit()
+                .remove()
+            ;
+
+
             var nodeLabels = g.nodeLabelGroup.selectAll("text")
                 .data(v.data.nodes)
             ;
@@ -577,6 +781,25 @@
                 .attr("display", v.getNodeLabelVisibility)
             ;
             nodeLabels.exit()
+                .remove()
+            ;
+
+            var nodeCareerLabels = g.nodeCareerLabelGroup.selectAll("text")
+                .data(v.data.nodes)
+            ;
+            nodeCareerLabels.enter()
+                .append("text")
+                .text(function(d) { return d["preflabel_en"]; })
+                .attr("x", function(d) { return scaleX(d.fx); })
+                .attr("y", function(d) { return scaleY(d.fy) - 12; })
+                .attr("i", function(d) { return d.index; })
+                .attr("display", v.getNodeCareerLabelVisibility)
+            ;
+            nodeCareerLabels.transition()
+                .duration(0)
+                .attr("display", v.getNodeCareerLabelVisibility)
+            ;
+            nodeCareerLabels.exit()
                 .remove()
             ;
 
@@ -653,6 +876,54 @@
             return res;
         },
 
+        getNodeCareerColor: function(d) {
+            var res = "transparent";
+            var cp = app.vis.careerPath;
+
+            if (cp.current.nodes.length > 0) {
+                if (cp.current.nodes.indexOf(d.index) !== -1) {
+                    res = "#0000ff";
+                }
+            }
+            return res;
+        },
+
+        getLinkCareerColor: function(d) {
+            var res = "transparent";
+            var cp = app.vis.careerPath;
+
+            if (cp.current.path.length > 0) {
+                for (var i = 0; i < cp.current.path.length; i++) {
+                    var p = cp.current.path[i];
+
+                    if ( (d.source === p.source && d.target === p.target) || (d.source === p.target && d.target === p.source) ) {
+                        res = "#0000ff";
+                        break;
+                    }
+                }
+            }
+
+            return res;
+        },
+
+        getNodeCareerLabelVisibility: function(d) {
+            var filterAttr = "isco_oc_key_l1";
+
+            var cp = app.vis.careerPath;
+
+            if (app.vis.params.category !== "all") {
+                if (d[filterAttr] !== app.vis.params.category) {
+                    return "none";
+                }
+            }
+            if (cp.current.nodes.length > 0) {
+                if (cp.current.nodes.indexOf(d.index) !== -1) {
+                    return "inline";
+                }
+            }
+            return "none";
+        },
+
         getNodeVisibility: function(d) {
             var filterAttr = "isco_oc_key_l1";
 
@@ -718,6 +989,9 @@
             v.g.nodeHaloGroup.selectAll("circle")
                 .classed("blur", true)
             ;
+            v.g.nodeCareerGroup.selectAll("circle")
+                .classed("blur", true)
+            ;
             v.g.nodeSectorGroup.selectAll("path")
                 .classed("blur", true)
             ;
@@ -726,9 +1000,15 @@
             v.g.nodeLabelGroup.selectAll("text")
                 .classed("blur", true)
             ;
+            v.g.nodeCareerLabelGroup.selectAll("text")
+                .classed("blur", true)
+            ;
 
             // Blur non-adjacent links:
             v.g.linkGroup.selectAll("line")
+                .classed("blur", true)
+            ;
+            v.g.linkCareerGroup.selectAll("line")
                 .classed("blur", true)
             ;
 
@@ -741,6 +1021,10 @@
                 .classed("blur", false)
                 .classed("focus", true)
             ;
+            v.g.nodeCareerGroup.selectAll("circle[i='" + d.index  + "']")
+                .classed("blur", false)
+                .classed("focus", true)
+            ;
             v.g.nodeSectorGroup.selectAll("path[i='" + d.index + "']")
                 .classed("blur", false)
                 .classed("focus", true)
@@ -748,6 +1032,10 @@
 
             // Highlight in my own label:
             v.g.nodeLabelGroup.selectAll("text[i='" + d.index + "']")
+                .classed("blur", false)
+                .classed("focus", true)
+            ;
+            v.g.nodeCareerLabelGroup.selectAll("text[i='" + d.index + "']")
                 .classed("blur", false)
                 .classed("focus", true)
             ;
@@ -764,12 +1052,20 @@
                     .classed("blur", false)
                     .classed("focus", true)
                 ;
+                v.g.nodeCareerGroup.selectAll("circle[i='" + adjIndex  + "']")
+                    .classed("blur", false)
+                    .classed("focus", true)
+                ;
                 v.g.nodeSectorGroup.selectAll("path[i='" + adjIndex + "']")
                     .classed("blur", false)
                     .classed("focus", true)
                 ;
 
                 v.g.nodeLabelGroup.selectAll("text[i='" + adjIndex + "']")
+                    .classed("blur", false)
+                    .classed("focus", true)
+                ;
+                v.g.nodeCareerLabelGroup.selectAll("text[i='" + adjIndex + "']")
                     .classed("blur", false)
                     .classed("focus", true)
                 ;
@@ -781,6 +1077,15 @@
                 .classed("focus", true)
             ;
             v.g.linkGroup.selectAll("line[ti='" + d.index + "']")
+                .classed("blur", false)
+                .classed("focus", true)
+            ;
+
+            v.g.linkCareerGroup.selectAll("line[si='" + d.index + "']")
+                .classed("blur", false)
+                .classed("focus", true)
+            ;
+            v.g.linkCareerGroup.selectAll("line[ti='" + d.index + "']")
                 .classed("blur", false)
                 .classed("focus", true)
             ;
@@ -805,6 +1110,10 @@
                 .classed("blur", false)
                 .classed("focus", false)
             ;
+            v.g.nodeCareerGroup.selectAll("circle")
+                .classed("blur", false)
+                .classed("focus", false)
+            ;
             v.g.nodeSectorGroup.selectAll("path")
                 .classed("blur", false)
                 .classed("focus", false)
@@ -815,9 +1124,17 @@
                 .classed("blur", false)
                 .classed("focus", false)
             ;
+            v.g.nodeCareerLabelGroup.selectAll('text')
+                .classed("blur", false)
+                .classed("focus", false)
+            ;
 
             // Restore links:
             v.g.linkGroup.selectAll("line")
+                .classed("blur", false)
+                .classed("focus", false)
+            ;
+            v.g.linkCareerGroup.selectAll("line")
                 .classed("blur", false)
                 .classed("focus", false)
             ;
